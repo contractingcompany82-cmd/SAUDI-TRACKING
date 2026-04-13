@@ -1,56 +1,91 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 
-# Page Configuration
-st.set_page_config(page_title="Saudi Courier Tracking", page_icon="🚚", layout="centered")
+# Page config for professional look
+st.set_page_config(page_title="Saudi Logistics Pro", page_icon="🇸🇦", layout="wide")
 
-# Custom CSS for RTL and Styling
+# Custom Styling
 st.markdown("""
     <style>
-    .main { text-align: right; }
-    .stButton>button { width: 100%; border-radius: 5px; height: 3em; background-color: #007bff; color: white; }
+    .main { background-color: #f8f9fa; }
+    .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; border: 1px solid #ddd; }
+    .status-box { padding: 20px; border-radius: 10px; background-color: #e9ecef; border-left: 5px solid #28a745; }
     </style>
     """, unsafe_allow_html=True)
 
-# Dummy Data - Real system mein ye Database (SQL/Google Sheets) se aayega
-tracking_data = {
-    "1001": {"status": "In Transit", "location": "Jeddah", "destination": "Riyadh", "update": "Arrived at Sorting Center"},
-    "1002": {"status": "Delivered", "location": "Dammam", "destination": "Dammam", "update": "Handed to recipient"},
-    "1003": {"status": "Out for Delivery", "location": "Mecca", "destination": "Mecca", "update": "With courier driver"},
-    "1004": {"status": "Processing", "location": "Medina", "destination": "Abha", "update": "Package scanned at warehouse"}
+# sidebar for Branding
+with st.sidebar:
+    st.image("https://img.icons8.com/color/96/delivery.png", width=100)
+    st.title("Saudi Logistics")
+    st.info("Quality Delivery across the Kingdom.")
+
+# Dummy Data with Dates
+# 'send_date': Kab bheja gaya | 'eta': Kab tak pahuchega
+tracking_db = {
+    "SA-2026-01": {
+        "status": "In Transit", 
+        "location": "Jeddah Hub", 
+        "destination": "Riyadh", 
+        "send_date": "2026-04-10",
+        "eta": "2026-04-14",
+        "update": "Departed from Jeddah Sorting Center"
+    },
+    "SA-2026-02": {
+        "status": "Delivered", 
+        "location": "Dammam", 
+        "destination": "Dammam", 
+        "send_date": "2026-04-05",
+        "eta": "2026-04-08",
+        "update": "Package delivered to customer"
+    }
 }
 
-# UI Header
-st.title("🚚 Saudi Courier Service")
-st.subheader("Track Your Shipment / اپنا پارسل ٹریک کریں")
+st.title("📦 Shipment Tracking System")
+st.write("Apna tracking number neeche darj karein.")
 
-# Input Section
-track_id = st.text_input("Enter Tracking Number (e.g., 1001):", placeholder="Type here...")
+# Layout for Search
+col1, col2 = st.columns([2, 1])
+with col1:
+    track_id = st.text_input("Enter Tracking ID (Example: SA-2026-01):").strip()
+with col2:
+    st.write("##")
+    search_btn = st.button("Track Order")
 
-if st.button("Track Status"):
-    if track_id in tracking_data:
-        data = tracking_data[track_id]
+if search_btn:
+    if track_id in tracking_db:
+        data = tracking_db[track_id]
         
-        # Display Results
-        st.success(f"Shipment Found!")
+        st.markdown("---")
         
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Current Status", data["status"])
-            st.write(f"**Current Location:** {data['location']}")
-        with col2:
-            st.metric("Destination", data["destination"])
-            st.write(f"**Last Update:** {data['update']}")
+        # UI Highlights
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Current Status", data["status"])
+        c2.metric("Sending Date", data["send_date"])
+        c3.metric("Estimated Arrival (ETA)", data["eta"])
         
-        # Progress Bar logic
-        steps = {"Processing": 25, "In Transit": 50, "Out for Delivery": 75, "Delivered": 100}
-        progress = steps.get(data["status"], 0)
-        st.progress(progress)
+        # Detailed Information Box
+        st.markdown(f"""
+        <div class="status-box">
+            <h4>Live Update: {data['update']}</h4>
+            <p><b>Current Location:</b> {data['location']} | <b>Destination:</b> {data['destination']}</p>
+        </div>
+        """, unsafe_allow_html=True)
         
+        # Timeline Visualizer
+        st.write("### Delivery Progress")
+        steps = ["Booked", "In Transit", "Out for Delivery", "Delivered"]
+        current_idx = steps.index(data["status"]) if data["status"] in steps else 1
+        
+        # Simple Progress bar based on steps
+        progress_val = (current_idx + 1) * 25
+        st.progress(progress_val)
+        
+        st.write(f"**Timeline:** {' ➡️ '.join([f'**{s}**' if s == data['status'] else s for s in steps])}")
+
     else:
-        st.error("Invalid Tracking Number. Please check and try again.")
+        st.error("❌ Invalid Tracking Number. Please verify and try again.")
 
-# Footer
+# Footer Area
 st.markdown("---")
-st.caption("Powered by Streamlit | Saudi Arabia Logistics Support")
+st.caption("© 2026 Saudi Logistics Management | Jeddah, KSA")
